@@ -508,7 +508,7 @@ body {
   font-weight: 700;
 }
 
-/* ====== AUTH - FIXED FOR SCROLLING ====== */
+/* ====== AUTH - FIXED WITH BUTTONS ON TOP ====== */
 .auth-wrap {
   display: flex;
   justify-content: center;
@@ -555,15 +555,16 @@ body {
   letter-spacing: 1px;
 }
 
+/* Auth tabs - moved to top */
 .auth-tabs {
   display: flex;
   gap: 8px;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 }
 
 .auth-tabs button {
   flex: 1;
-  padding: 10px;
+  padding: 12px;
   border-radius: 12px;
   border: none;
   font-weight: 700;
@@ -572,12 +573,33 @@ body {
   cursor: pointer;
   transition: all var(--transition-fast);
   font-family: var(--font-family-body);
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .auth-tabs button.active {
   background: var(--accent4);
   color: white;
+}
+
+/* Auth action buttons - at the top of the form */
+.auth-action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+  margin-top: 4px;
+}
+
+.auth-action-buttons .btn {
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  border-radius: 14px;
+}
+
+/* Form fields */
+.auth-form-fields {
+  margin-top: 4px;
 }
 
 /* ====== FORMS ====== */
@@ -586,7 +608,7 @@ label {
   font-size: 13px;
   color: var(--text-secondary);
   display: block;
-  margin: 14px 0 5px;
+  margin: 12px 0 4px;
 }
 
 input, textarea, select {
@@ -1341,13 +1363,21 @@ textarea {
   .fab { width: 48px; height: 48px; font-size: 24px; bottom: 76px; right: 12px; }
   .notification-panel { width: calc(100% - 24px); right: 12px; top: 64px; max-height: 60vh; }
   .auth-box { 
-    padding: 24px 16px; 
+    padding: 20px 16px; 
     border-radius: 16px;
     margin: 10px auto;
   }
   .auth-wrap {
-    padding: 10px 16px;
+    padding: 10px 12px;
     align-items: flex-start;
+  }
+  .auth-tabs button {
+    padding: 10px;
+    font-size: 13px;
+  }
+  .auth-action-buttons .btn {
+    padding: 12px;
+    font-size: 14px;
   }
   .font-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
   .comment-replies { margin-left: 0; padding-left: 0; border-left: none; }
@@ -1973,40 +2003,54 @@ function render() {
   setTimeout(detectKeyboard, 100);
 }
 
-// ====== AUTH SCREEN ======
+// ====== AUTH SCREEN - FIXED WITH BUTTONS ON TOP ======
 function renderAuthScreen() {
   let inner = '';
   if (authMode === 'login') {
     inner = `
       <div class="auth-tabs">
-        <button data-auth-tab="login" class="active">Log in</button>
-        <button data-auth-tab="signup">Sign up</button>
+        <button data-auth-tab="login" class="active">🔑 Log in</button>
+        <button data-auth-tab="signup">✨ Sign up</button>
       </div>
-      <form id="login-form">
-        <label>Username</label>
-        <input type="text" name="email" required placeholder="your username">
-        <label>Password</label>
-        <input type="password" name="password" required placeholder="••••••••">
-        ${authError ? `<div class="error-msg">${esc(authError)}</div>` : ''}
-        ${authSuccess ? `<div class="success-msg">${esc(authSuccess)}</div>` : ''}
-        <button class="btn" style="width:100%;margin-top:18px;" type="submit">Log in</button>
-      </form>`;
+      
+      <!-- LOGIN BUTTONS AT THE TOP -->
+      <div class="auth-action-buttons">
+        <button class="btn purple" id="login-action-btn" style="font-size:16px;padding:14px;">🔓 Log In</button>
+      </div>
+      
+      <div class="auth-form-fields">
+        <form id="login-form">
+          <label>Username</label>
+          <input type="text" name="email" required placeholder="your username">
+          <label>Password</label>
+          <input type="password" name="password" required placeholder="••••••••">
+          ${authError ? `<div class="error-msg">${esc(authError)}</div>` : ''}
+          ${authSuccess ? `<div class="success-msg">${esc(authSuccess)}</div>` : ''}
+        </form>
+      </div>`;
   } else {
     inner = `
       <div class="auth-tabs">
-        <button data-auth-tab="login">Log in</button>
-        <button data-auth-tab="signup" class="active">Sign up</button>
+        <button data-auth-tab="login">🔑 Log in</button>
+        <button data-auth-tab="signup" class="active">✨ Sign up</button>
       </div>
-      <form id="signup-form">
-        <label>Display name</label>
-        <input type="text" name="displayName" required maxlength="30" placeholder="What should we call you?">
-        <label>Username</label>
-        <input type="text" name="email" required placeholder="your username">
-        <label>Password</label>
-        <input type="password" name="password" required minlength="6" placeholder="At least 6 characters">
-        ${authError ? `<div class="error-msg">${esc(authError)}</div>` : ''}
-        <button class="btn secondary" style="width:100%;margin-top:18px;" type="submit">Create account</button>
-      </form>`;
+      
+      <!-- SIGNUP BUTTONS AT THE TOP -->
+      <div class="auth-action-buttons">
+        <button class="btn secondary" id="signup-action-btn" style="font-size:16px;padding:14px;">🚀 Sign Up</button>
+      </div>
+      
+      <div class="auth-form-fields">
+        <form id="signup-form">
+          <label>Display name</label>
+          <input type="text" name="displayName" required maxlength="30" placeholder="What should we call you?">
+          <label>Username</label>
+          <input type="text" name="email" required placeholder="your username">
+          <label>Password</label>
+          <input type="password" name="password" required minlength="6" placeholder="At least 6 characters">
+          ${authError ? `<div class="error-msg">${esc(authError)}</div>` : ''}
+        </form>
+      </div>`;
   }
   return `
     <div class="auth-wrap">
@@ -2255,7 +2299,7 @@ function renderSettingsTab() {
       ${renderAppearanceTab()}
       ${renderFontTab()}
       
-      <!-- CREATOR CREDIT SECTION -->
+      <!-- CREATOR CREDIT SECTION WITH GITHUB AND GMAIL -->
       <div class="creator-credit">
         <div class="creator-badge">
           <span class="heart">❤️</span>
@@ -2267,8 +2311,8 @@ function renderSettingsTab() {
         <div class="creator-role">✨ Full-Stack Developer & UI/UX Designer</div>
         <div class="creator-socials">
           <a href="#" onclick="return false;"><span class="icon">🐦</span> Twitter</a>
-          <a href="#" onclick="return false;"><span class="icon">💻</span> GitHub</a>
-          <a href="#" onclick="return false;"><span class="icon">📧</span> Email</a>
+          <a href="https://github.com/Rabbythecalico" target="_blank" style="border-color:var(--accent4);background:var(--tag-bg);"><span class="icon">💻</span> GitHub</a>
+          <a href="mailto:franciseco603@gmail.com" style="border-color:var(--accent4);background:var(--tag-bg);"><span class="icon">📧</span> Gmail</a>
           <a href="#" onclick="return false;"><span class="icon">🎨</span> Portfolio</a>
         </div>
         <div class="version-tag">v2.0.0 • Beautiful Comments Edition</div>
@@ -2593,6 +2637,24 @@ function attachHandlers() {
         render();
       };
     });
+
+    // Login button at top
+    const loginActionBtn = document.getElementById('login-action-btn');
+    if (loginActionBtn) {
+      loginActionBtn.onclick = () => {
+        const form = document.getElementById('login-form');
+        if (form) form.dispatchEvent(new Event('submit'));
+      };
+    }
+
+    // Signup button at top
+    const signupActionBtn = document.getElementById('signup-action-btn');
+    if (signupActionBtn) {
+      signupActionBtn.onclick = () => {
+        const form = document.getElementById('signup-form');
+        if (form) form.dispatchEvent(new Event('submit'));
+      };
+    }
 
     const loginForm = document.getElementById('login-form');
     if (loginForm) loginForm.onsubmit = handleLogin;
@@ -3637,6 +3699,9 @@ async function handleOCFormSubmit(e) {
   console.log('🐛 FIXED: Images now show in modal!');
   console.log('👩‍💻 Creator credit added!');
   console.log('📱 FIXED: Auth screen now scrolls on mobile!');
+  console.log('🔝 FIXED: Login/Signup buttons at the TOP!');
+  console.log('📧 Gmail added to creator buttons!');
+  console.log('💻 GitHub: https://github.com/Rabbythecalico');
 })();
 </script>
 </body>
