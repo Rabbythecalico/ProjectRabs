@@ -8,6 +8,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Quicksand:wght@400;500;600;700&family=Space+Mono&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Dancing+Script:wght@400;700&family=Cormorant+Garamond:wght@400;600;700&family=Montserrat:wght@400;600;700&family=Poppins:wght@400;600;700&family=Merriweather:wght@400;700&family=Abril+Fatface&family=Great+Vibes&family=Raleway:wght@400;600;700&family=Oswald:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
+/* ============================================================
+   PROJECTRABS — BEAUTIFUL COMMENTS
+   ============================================================ */
+
 /* ====== ROOT VARIABLES ====== */
 :root {
   --bg: #FBF3FF;
@@ -1626,6 +1630,38 @@ textarea {
   cursor: pointer;
   user-select: none;
 }
+
+/* ====== BG SWATCHES FIX ====== */
+.bg-swatches {
+  pointer-events: auto !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  margin-top: 8px !important;
+}
+
+.bg-swatch {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  user-select: none !important;
+  position: relative !important;
+}
+
+.bg-swatch:hover {
+  transform: scale(1.05) !important;
+  border-color: var(--accent4) !important;
+  box-shadow: 0 2px 8px rgba(108, 92, 231, 0.3) !important;
+}
+
+.bg-swatch.selected {
+  border-color: var(--text-primary) !important;
+  box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.3) !important;
+}
+
+.bg-swatch span {
+  pointer-events: none !important;
+}
 </style>
 </head>
 <body>
@@ -2452,7 +2488,7 @@ function renderFontTab() {
     </div>`;
 }
 
-// ====== OC FORM TAB - FIXED CHECKBOX ======
+// ====== OC FORM TAB - FIXED ======
 function renderOCFormTab() {
   const oc = editingOC;
   if (oc && formStickerLayers.length === 0 && oc.stickerLayers) {
@@ -2515,12 +2551,12 @@ function renderOCFormTab() {
             </div>
             ${!hasImages ? `<p style="color:var(--text-secondary);font-size:13px;margin-top:8px;">📸 No images uploaded yet. Click the button above to add some!</p>` : `<p style="color:var(--text-secondary);font-size:13px;margin-top:8px;">✅ ${formImages.length} image(s) uploaded. Click ✕ to remove.</p>`}
             <label>Background theme</label>
-            <div class="bg-swatches" id="bg-swatches" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">
+            <div class="bg-swatches" id="bg-swatches" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;pointer-events:auto;">
               ${BG_THEMES.map(b => `
                 <div class="bg-swatch ${b.cls} ${(formBgTheme === b.id) ? 'selected' : ''}" 
                      data-bg="${b.id}" 
-                     style="width:80px;height:44px;border-radius:8px;border:3px solid ${(formBgTheme === b.id) ? 'var(--text-primary)' : 'transparent'};display:flex;align-items:flex-end;padding:4px 6px;font-size:9px;font-weight:700;color:white;text-shadow:0 1px 2px rgba(0,0,0,0.5);cursor:pointer;background:${bgClass(b.id)};">
-                  ${b.label}
+                     style="width:80px;height:44px;border-radius:8px;border:3px solid ${(formBgTheme === b.id) ? 'var(--text-primary)' : 'transparent'};display:flex;align-items:flex-end;padding:4px 6px;font-size:9px;font-weight:700;color:white;text-shadow:0 1px 2px rgba(0,0,0,0.5);cursor:pointer;background:${bgClass(b.id)};pointer-events:auto;transition:all 0.2s ease;user-select:none;">
+                  <span style="pointer-events:none;">${b.label}</span>
                 </div>
               `).join('')}
             </div>
@@ -2537,7 +2573,7 @@ function renderOCFormTab() {
             </div>`).join('')}
         </div>
 
-        <!-- FIXED: NSFW CHECKBOX - NOW VISIBLE AND WORKING -->
+        <!-- NSFW CHECKBOX -->
         <div class="nsfw-checkbox-container">
           <input type="checkbox" name="contentWarning" id="contentWarningCheckbox" ${isChecked ? 'checked' : ''}>
           <label for="contentWarningCheckbox" class="nsfw-label">⚠️ This post contains mature content (NSFW)</label>
@@ -2879,12 +2915,16 @@ function attachHandlers() {
   if (ocForm) {
     setupChipHandlers();
 
+    // FIXED: Background theme click handlers
     document.querySelectorAll('#bg-swatches .bg-swatch').forEach(sw => {
-      sw.onclick = (e) => {
+      sw.onclick = function(e) {
+        e.preventDefault();
         e.stopPropagation();
-        formBgTheme = sw.dataset.bg;
+        const bgId = this.dataset.bg;
+        formBgTheme = bgId;
         document.querySelectorAll('#bg-swatches .bg-swatch').forEach(s => s.classList.remove('selected'));
-        sw.classList.add('selected');
+        this.classList.add('selected');
+        console.log('Theme selected:', bgId);
       };
     });
 
@@ -3608,7 +3648,6 @@ async function handleOCFormSubmit(e) {
   const pronouns = fd.get('pronouns').trim();
   const gender = fd.get('gender').trim();
   const tagsStr = fd.get('tags').trim();
-  // FIX: Properly get checkbox value
   const contentWarning = fd.has('contentWarning') && fd.get('contentWarning') === 'on';
 
   if (!name || !desc) {
@@ -3696,6 +3735,7 @@ async function handleOCFormSubmit(e) {
   setTimeout(detectKeyboard, 500);
 
   console.log('🎨 ProjectRabs with Beautiful Comments loaded!');
+  console.log('🐛 FIXED: Background themes are now clickable!');
   console.log('🐛 FIXED: NSFW checkbox is now visible!');
   console.log('🔗 FIXED: GitHub and Gmail links work!');
   console.log('🎨 FIXED: Theme selection saves!');
