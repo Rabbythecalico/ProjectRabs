@@ -1542,6 +1542,9 @@ textarea {
   transition: all var(--transition-fast);
   background: var(--bg-card);
   border: 2px solid var(--border-color);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .creator-credit .creator-socials a:hover {
@@ -1571,6 +1574,43 @@ textarea {
   padding: 2px 10px;
   border-radius: 999px;
   margin-top: 6px;
+}
+
+/* ====== CHECKBOX FIX ====== */
+input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: var(--accent4);
+  flex-shrink: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  border-radius: 4px;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+input[type="checkbox"]:checked {
+  background: var(--accent4);
+  border-color: var(--accent4);
+}
+
+input[type="checkbox"]:checked::after {
+  content: "✓";
+  color: white;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+input[type="checkbox"]:focus {
+  outline: 2px solid var(--accent4);
+  outline-offset: 2px;
 }
 </style>
 </head>
@@ -2003,7 +2043,7 @@ function render() {
   setTimeout(detectKeyboard, 100);
 }
 
-// ====== AUTH SCREEN - FIXED WITH BUTTONS ON TOP ======
+// ====== AUTH SCREEN ======
 function renderAuthScreen() {
   let inner = '';
   if (authMode === 'login') {
@@ -2013,7 +2053,6 @@ function renderAuthScreen() {
         <button data-auth-tab="signup">✨ Sign up</button>
       </div>
       
-      <!-- LOGIN BUTTONS AT THE TOP -->
       <div class="auth-action-buttons">
         <button class="btn purple" id="login-action-btn" style="font-size:16px;padding:14px;">🔓 Log In</button>
       </div>
@@ -2035,7 +2074,6 @@ function renderAuthScreen() {
         <button data-auth-tab="signup" class="active">✨ Sign up</button>
       </div>
       
-      <!-- SIGNUP BUTTONS AT THE TOP -->
       <div class="auth-action-buttons">
         <button class="btn secondary" id="signup-action-btn" style="font-size:16px;padding:14px;">🚀 Sign Up</button>
       </div>
@@ -2299,7 +2337,7 @@ function renderSettingsTab() {
       ${renderAppearanceTab()}
       ${renderFontTab()}
       
-      <!-- CREATOR CREDIT SECTION WITH GITHUB AND GMAIL -->
+      <!-- CREATOR CREDIT SECTION -->
       <div class="creator-credit">
         <div class="creator-badge">
           <span class="heart">❤️</span>
@@ -2311,8 +2349,8 @@ function renderSettingsTab() {
         <div class="creator-role">✨ Full-Stack Developer & UI/UX Designer</div>
         <div class="creator-socials">
           <a href="#" onclick="return false;"><span class="icon">🐦</span> Twitter</a>
-          <a href="https://github.com/Rabbythecalico" target="_blank" style="border-color:var(--accent4);background:var(--tag-bg);"><span class="icon">💻</span> GitHub</a>
-          <a href="mailto:franciseco603@gmail.com" style="border-color:var(--accent4);background:var(--tag-bg);"><span class="icon">📧</span> Gmail</a>
+          <a href="https://github.com/Rabbythecalico" target="_blank" rel="noopener noreferrer"><span class="icon">💻</span> GitHub</a>
+          <a href="mailto:franciseco603@gmail.com"><span class="icon">📧</span> Gmail</a>
           <a href="#" onclick="return false;"><span class="icon">🎨</span> Portfolio</a>
         </div>
         <div class="version-tag">v2.0.0 • Beautiful Comments Edition</div>
@@ -2401,7 +2439,7 @@ function renderFontTab() {
     </div>`;
 }
 
-// ====== OC FORM TAB ======
+// ====== OC FORM TAB - FIXED WITH CHECKBOX ======
 function renderOCFormTab() {
   const oc = editingOC;
   if (oc && formStickerLayers.length === 0 && oc.stickerLayers) {
@@ -2410,14 +2448,14 @@ function renderOCFormTab() {
   if (oc && formImages.length === 0 && oc.images) {
     formImages = [...oc.images];
   }
-  formBgTheme = oc ? oc.bgTheme : formBgTheme;
-
   if (oc) {
+    formBgTheme = oc.bgTheme || 'none';
     selectedPronoun = oc.pronouns || '';
     selectedGender = oc.gender || '';
   }
 
   const hasImages = formImages.length > 0;
+  const isChecked = (oc && oc.contentWarning === true);
 
   return `
     <div style="background:var(--bg-card);border-radius:16px;padding:20px;box-shadow:0 2px 12px var(--shadow);">
@@ -2465,7 +2503,13 @@ function renderOCFormTab() {
             ${!hasImages ? `<p style="color:var(--text-secondary);font-size:13px;margin-top:8px;">📸 No images uploaded yet. Click the button above to add some!</p>` : `<p style="color:var(--text-secondary);font-size:13px;margin-top:8px;">✅ ${formImages.length} image(s) uploaded. Click ✕ to remove.</p>`}
             <label>Background theme</label>
             <div class="bg-swatches" id="bg-swatches" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">
-              ${BG_THEMES.map(b => `<div class="bg-swatch ${b.cls} ${(formBgTheme === b.id) ? 'selected' : ''}" data-bg="${b.id}" style="width:80px;height:44px;border-radius:8px;border:3px solid ${(formBgTheme === b.id) ? 'var(--text-primary)' : 'transparent'};display:flex;align-items:flex-end;padding:4px 6px;font-size:9px;font-weight:700;color:white;text-shadow:0 1px 2px rgba(0,0,0,0.5);cursor:pointer;background:${bgClass(b.id)};">${b.label}</div>`).join('')}
+              ${BG_THEMES.map(b => `
+                <div class="bg-swatch ${b.cls} ${(formBgTheme === b.id) ? 'selected' : ''}" 
+                     data-bg="${b.id}" 
+                     style="width:80px;height:44px;border-radius:8px;border:3px solid ${(formBgTheme === b.id) ? 'var(--text-primary)' : 'transparent'};display:flex;align-items:flex-end;padding:4px 6px;font-size:9px;font-weight:700;color:white;text-shadow:0 1px 2px rgba(0,0,0,0.5);cursor:pointer;background:${bgClass(b.id)};">
+                  ${b.label}
+                </div>
+              `).join('')}
             </div>
           </div>
         </div>
@@ -2480,9 +2524,10 @@ function renderOCFormTab() {
             </div>`).join('')}
         </div>
 
-        <label style="margin-top:14px;">
-          <input type="checkbox" name="contentWarning" ${oc && oc.contentWarning ? 'checked' : ''}>
-          ⚠️ This post contains mature content (NSFW)
+        <!-- FIXED: NSFW CHECKBOX - NOW VISIBLE -->
+        <label style="margin-top:14px;display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;background:var(--bg-secondary);border-radius:10px;border:2px solid var(--border-color);">
+          <input type="checkbox" name="contentWarning" id="contentWarningCheckbox" ${isChecked ? 'checked' : ''} style="width:20px;height:20px;cursor:pointer;accent-color:var(--accent4);flex-shrink:0;">
+          <span style="font-weight:600;color:var(--text-secondary);font-size:14px;">⚠️ This post contains mature content (NSFW)</span>
         </label>
 
         ${ocFormError ? `<div class="error-msg">${esc(ocFormError)}</div>` : ''}
@@ -2556,7 +2601,6 @@ function renderCommentItem(comment, idx, oc) {
   const commentText = comment.text || '';
   const avatarLetter = (comment.name || 'U').slice(0, 1);
   
-  // Check for sticker in comment
   let displayText = commentText;
   let stickerHtml = '';
   const stickerMatch = commentText.match(/!\[sticker\]\(([^)]+)\)/);
@@ -2565,7 +2609,6 @@ function renderCommentItem(comment, idx, oc) {
     displayText = commentText.replace(/!\[sticker\]\([^)]+\)/, '').trim();
   }
 
-  // Check for GIF
   const gifMatch = commentText.match(/!\[gif\]\(([^)]+)\)/);
   if (gifMatch) {
     stickerHtml = `<img src="${gifMatch[1]}" class="sticker-inline" alt="gif" style="max-width:120px;max-height:120px;">`;
@@ -2596,7 +2639,6 @@ function renderCommentItem(comment, idx, oc) {
           ${isOwner ? `<button class="delete-btn" data-comment-delete="${idx}" style="color:var(--danger);">Delete</button>` : ''}
         </div>
         
-        <!-- Comment Reactions -->
         <div class="comment-reactions">
           ${EMOJI_REACTIONS.slice(0, 8).map(emoji => {
             const users = reactions[emoji] || [];
@@ -2612,7 +2654,6 @@ function renderCommentItem(comment, idx, oc) {
           ${Object.keys(reactions).length > 8 ? `<span style="font-size:12px;color:var(--text-muted);">+${Object.keys(reactions).length - 8}</span>` : ''}
         </div>
         
-        <!-- Reply Form (hidden by default) -->
         <div class="comment-reply-form" id="reply-form-${idx}" style="display:none;">
           <input type="text" placeholder="Write a reply..." class="reply-input" data-reply-to="${idx}">
           <button class="send-reply-btn" data-reply-to="${idx}">Reply</button>
@@ -2627,7 +2668,6 @@ function renderCommentItem(comment, idx, oc) {
 
 // ====== HANDLERS ======
 function attachHandlers() {
-  // Auth handlers
   if (screen === 'auth') {
     document.querySelectorAll('[data-auth-tab]').forEach(b => {
       b.onclick = () => {
@@ -2638,7 +2678,6 @@ function attachHandlers() {
       };
     });
 
-    // Login button at top
     const loginActionBtn = document.getElementById('login-action-btn');
     if (loginActionBtn) {
       loginActionBtn.onclick = () => {
@@ -2647,7 +2686,6 @@ function attachHandlers() {
       };
     }
 
-    // Signup button at top
     const signupActionBtn = document.getElementById('signup-action-btn');
     if (signupActionBtn) {
       signupActionBtn.onclick = () => {
@@ -2664,7 +2702,6 @@ function attachHandlers() {
     return;
   }
 
-  // Navigation
   document.querySelectorAll('[data-tab]').forEach(b => {
     b.onclick = async (e) => {
       e.stopPropagation();
@@ -2678,7 +2715,6 @@ function attachHandlers() {
     };
   });
 
-  // Brand click
   const brandToggle = document.getElementById('brand-toggle');
   if (brandToggle) {
     brandToggle.onclick = () => {
@@ -2687,7 +2723,6 @@ function attachHandlers() {
     };
   }
 
-  // Notification bell
   const notifBell = document.getElementById('notif-bell');
   if (notifBell) {
     const newBell = notifBell.cloneNode(true);
@@ -2706,7 +2741,6 @@ function attachHandlers() {
     };
   }
 
-  // Close notification panel
   const closePanel = document.getElementById('close-notif-panel');
   if (closePanel) {
     closePanel.onclick = (e) => {
@@ -2716,7 +2750,6 @@ function attachHandlers() {
     };
   }
 
-  // Dismiss notification
   document.querySelectorAll('.dismiss-notif').forEach(btn => {
     btn.onclick = async (e) => {
       e.stopPropagation();
@@ -2729,7 +2762,6 @@ function attachHandlers() {
     };
   });
 
-  // Clear all notifications
   const clearNotifs = document.getElementById('clear-notifs');
   if (clearNotifs) {
     clearNotifs.onclick = async (e) => {
@@ -2742,7 +2774,6 @@ function attachHandlers() {
     };
   }
 
-  // Click outside notification panel
   document.addEventListener('click', (e) => {
     const panel = document.getElementById('notif-panel');
     const bell = document.getElementById('notif-bell');
@@ -2754,7 +2785,6 @@ function attachHandlers() {
     }
   });
 
-  // Logout
   const logoutBtn = document.getElementById('logout-btn');
   if (logoutBtn) {
     logoutBtn.onclick = () => {
@@ -2768,7 +2798,6 @@ function attachHandlers() {
     };
   }
 
-  // FAB
   const fab = document.getElementById('fab-btn');
   if (fab) {
     fab.onclick = () => {
@@ -2785,7 +2814,6 @@ function attachHandlers() {
     };
   }
 
-  // New OC button
   const newOcBtn = document.getElementById('new-oc-btn');
   if (newOcBtn) {
     newOcBtn.onclick = () => {
@@ -2802,10 +2830,8 @@ function attachHandlers() {
     };
   }
 
-  // Feed controls
   wireFeedControls();
 
-  // Feed cards - FIXED: Use proper click handling
   document.querySelectorAll('[data-open-oc]').forEach(el => {
     el.onclick = function(e) {
       e.preventDefault();
@@ -2820,7 +2846,6 @@ function attachHandlers() {
     };
   });
 
-  // Edit OC
   document.querySelectorAll('[data-edit-oc]').forEach(el => {
     el.onclick = (e) => {
       e.stopPropagation();
@@ -2839,7 +2864,6 @@ function attachHandlers() {
     };
   });
 
-  // OC Form
   const ocForm = document.getElementById('oc-form');
   if (ocForm) {
     setupChipHandlers();
@@ -2926,7 +2950,6 @@ function attachHandlers() {
     }
   }
 
-  // Sticker upload
   const stickerUpload = document.getElementById('sticker-upload');
   if (stickerUpload) {
     stickerUpload.onchange = async () => {
@@ -2953,7 +2976,6 @@ function attachHandlers() {
     };
   });
 
-  // Profile form
   const profileForm = document.getElementById('profile-form');
   if (profileForm) {
     setupChipHandlers();
@@ -2976,7 +2998,6 @@ function attachHandlers() {
     };
   }
 
-  // Theme selection
   document.querySelectorAll('[data-theme]').forEach(sw => {
     sw.onclick = async (e) => {
       e.stopPropagation();
@@ -2988,7 +3009,6 @@ function attachHandlers() {
     };
   });
 
-  // Font selection
   document.querySelectorAll('[data-font]').forEach(fontOption => {
     fontOption.onclick = async (e) => {
       e.stopPropagation();
@@ -3117,9 +3137,8 @@ function setupChipHandlers() {
   });
 }
 
-// ====== MODAL RENDER - FIXED WITH IMAGES ======
+// ====== MODAL RENDER ======
 function renderModalOnly() {
-  // Remove existing modal first - CLEANUP
   const existing = document.getElementById('modal-backdrop');
   if (existing) {
     existing.remove();
@@ -3131,7 +3150,6 @@ function renderModalOnly() {
   const liked = currentUser && (oc.likes || []).includes(currentUser.email);
   const relationships = getOCRelationships(oc);
   
-  // FIX: Better image handling
   let allImages = [];
   if (oc.images && oc.images.length > 0) {
     allImages = [...oc.images];
@@ -3139,7 +3157,6 @@ function renderModalOnly() {
     allImages = [oc.image];
   }
   
-  // If still no images, check if there's a single image property
   if (allImages.length === 0 && oc.image) {
     allImages = [oc.image];
   }
@@ -3172,7 +3189,6 @@ function renderModalOnly() {
           </div>` : ''}
         <div><span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--text-secondary);display:inline-block;background:var(--tag-bg);padding:3px 10px;border-radius:6px;margin-top:6px;">📌 posted ${formatDate(oc.createdAt)}</span></div>
         
-        <!-- FIXED: Image display section -->
         ${allImages.length > 0 ? `
           <div style="margin-top:12px;border-radius:12px;overflow:hidden;background:var(--bg-secondary);border:2px solid var(--border-color);">
             ${allImages.length === 1 ? `
@@ -3206,7 +3222,6 @@ function renderModalOnly() {
           ${oc.contentWarning ? `<span style="color:var(--danger);font-weight:700;">⚠️ This post has a content warning</span>` : ''}
         </div>
         
-        <!-- BEAUTIFUL COMMENTS SECTION -->
         ${renderBeautifulComments(oc)}
         
       </div>
@@ -3215,9 +3230,6 @@ function renderModalOnly() {
 
   document.body.appendChild(wrapper.firstElementChild);
 
-  // --- MODAL EVENT HANDLERS ---
-
-  // Close modal - FIXED
   const closeBtn = document.getElementById('close-modal');
   if (closeBtn) {
     closeBtn.onclick = function(e) {
@@ -3228,7 +3240,6 @@ function renderModalOnly() {
     };
   }
   
-  // Backdrop click - FIXED
   const backdrop = document.getElementById('modal-backdrop');
   if (backdrop) {
     backdrop.onclick = function(e) {
@@ -3239,9 +3250,6 @@ function renderModalOnly() {
     };
   }
 
-  // --- COMMENT INPUT HANDLERS ---
-
-  // Auto-resize textarea
   const textarea = document.getElementById('comment-textarea');
   if (textarea) {
     textarea.addEventListener('input', () => {
@@ -3249,7 +3257,6 @@ function renderModalOnly() {
       textarea.style.height = Math.min(textarea.scrollHeight, 100) + 'px';
     });
     
-    // Enter to submit (Shift+Enter for new line)
     textarea.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -3258,7 +3265,6 @@ function renderModalOnly() {
     });
   }
 
-  // Emoji toolbar buttons
   document.querySelectorAll('[data-emoji]').forEach(btn => {
     btn.onclick = () => {
       const emoji = btn.dataset.emoji;
@@ -3272,12 +3278,10 @@ function renderModalOnly() {
     };
   });
 
-  // Sticker toolbar buttons
   document.querySelectorAll('[data-sticker]').forEach(btn => {
     btn.onclick = () => {
       const stickerUrl = btn.dataset.sticker;
       if (textarea) {
-        // Insert sticker as markdown image
         const cursor = textarea.selectionStart;
         const text = textarea.value;
         const stickerMarkdown = ` ![sticker](${stickerUrl}) `;
@@ -3288,13 +3292,11 @@ function renderModalOnly() {
     };
   });
 
-  // Send comment
   const sendBtn = document.getElementById('send-comment-btn');
   if (sendBtn) {
     sendBtn.onclick = submitComment;
   }
 
-  // --- COMMENT REACTION HANDLERS ---
   document.querySelectorAll('[data-comment-reaction]').forEach(el => {
     el.onclick = async (e) => {
       e.stopPropagation();
@@ -3313,7 +3315,6 @@ function renderModalOnly() {
     };
   });
 
-  // --- COMMENT LIKE HANDLERS ---
   document.querySelectorAll('[data-comment-like]').forEach(el => {
     el.onclick = async (e) => {
       e.stopPropagation();
@@ -3331,7 +3332,6 @@ function renderModalOnly() {
     };
   });
 
-  // --- REPLY BUTTON HANDLERS ---
   document.querySelectorAll('[data-comment-reply]').forEach(el => {
     el.onclick = (e) => {
       e.stopPropagation();
@@ -3345,7 +3345,6 @@ function renderModalOnly() {
     };
   });
 
-  // --- SEND REPLY HANDLERS ---
   document.querySelectorAll('.send-reply-btn').forEach(btn => {
     btn.onclick = async (e) => {
       e.stopPropagation();
@@ -3358,7 +3357,6 @@ function renderModalOnly() {
       const parentComment = openOC.comments[idx];
       if (!parentComment) return;
       
-      // Add reply as a new comment with reference
       if (!openOC.comments) openOC.comments = [];
       openOC.comments.push({
         email: currentUser.email,
@@ -3377,7 +3375,6 @@ function renderModalOnly() {
     };
   });
 
-  // --- CANCEL REPLY HANDLERS ---
   document.querySelectorAll('.cancel-reply-btn').forEach(btn => {
     btn.onclick = (e) => {
       e.stopPropagation();
@@ -3387,7 +3384,6 @@ function renderModalOnly() {
     };
   });
 
-  // --- DELETE COMMENT HANDLERS ---
   document.querySelectorAll('[data-comment-delete]').forEach(el => {
     el.onclick = async (e) => {
       e.stopPropagation();
@@ -3404,7 +3400,6 @@ function renderModalOnly() {
     };
   });
 
-  // --- EDIT/DELETE OC BUTTONS ---
   if (isOwner) {
     const editBtn = document.getElementById('edit-oc-btn');
     if (editBtn) {
@@ -3437,7 +3432,6 @@ function renderModalOnly() {
     }
   }
 
-  // --- LIKE BUTTON ---
   const likeBtn = document.getElementById('like-btn');
   if (likeBtn) {
     likeBtn.onclick = async (e) => {
@@ -3462,7 +3456,6 @@ function renderModalOnly() {
     };
   }
 
-  // Helper function to submit comment
   function submitComment() {
     const textarea = document.getElementById('comment-textarea');
     if (!textarea || !textarea.value.trim()) return;
@@ -3604,7 +3597,8 @@ async function handleOCFormSubmit(e) {
   const pronouns = fd.get('pronouns').trim();
   const gender = fd.get('gender').trim();
   const tagsStr = fd.get('tags').trim();
-  const contentWarning = fd.has('contentWarning');
+  // FIX: Properly get checkbox value
+  const contentWarning = fd.has('contentWarning') && fd.get('contentWarning') === 'on';
 
   if (!name || !desc) {
     ocFormError = 'Please fill in a name and description.';
@@ -3644,7 +3638,7 @@ async function handleOCFormSubmit(e) {
       stickerLayers: formStickerLayers.map(l => ({ ...l })),
       stickers: formStickerLayers.map(l => l.src),
       tags,
-      contentWarning,
+      contentWarning: contentWarning,
       createdAt: new Date().toISOString(),
       likes: [],
       comments: [],
@@ -3691,17 +3685,10 @@ async function handleOCFormSubmit(e) {
   setTimeout(detectKeyboard, 500);
 
   console.log('🎨 ProjectRabs with Beautiful Comments loaded!');
-  console.log('📱 Mobile: Bottom nav + FAB');
-  console.log('💻 Desktop: Sidebar navigation');
-  console.log('💬 New: Beautiful comment section with reactions, likes, and replies!');
-  console.log('🔤 Font chooser restored!');
-  console.log('🎭 Sticker reactions + GIF support in comments!');
-  console.log('🐛 FIXED: Images now show in modal!');
-  console.log('👩‍💻 Creator credit added!');
-  console.log('📱 FIXED: Auth screen now scrolls on mobile!');
-  console.log('🔝 FIXED: Login/Signup buttons at the TOP!');
-  console.log('📧 Gmail added to creator buttons!');
-  console.log('💻 GitHub: https://github.com/Rabbythecalico');
+  console.log('🐛 FIXED: NSFW checkbox is now visible!');
+  console.log('🔗 FIXED: GitHub and Gmail links work!');
+  console.log('🎨 FIXED: Theme selection saves!');
+  console.log('📱 FIXED: Auth screen scrolls on mobile!');
 })();
 </script>
 </body>
