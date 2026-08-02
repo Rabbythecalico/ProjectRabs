@@ -508,13 +508,16 @@ body {
   font-weight: 700;
 }
 
-/* ====== AUTH ====== */
+/* ====== AUTH - FIXED FOR SCROLLING ====== */
 .auth-wrap {
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   min-height: 100vh;
+  height: 100vh;
   padding: 20px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .auth-box {
@@ -524,6 +527,8 @@ body {
   max-width: 420px;
   width: 100%;
   box-shadow: 0 4px 32px var(--shadow-lg);
+  margin: 20px auto;
+  flex-shrink: 0;
 }
 
 .auth-box .brand-center {
@@ -1335,7 +1340,15 @@ textarea {
   .bottom-nav button .icon { font-size: 20px; }
   .fab { width: 48px; height: 48px; font-size: 24px; bottom: 76px; right: 12px; }
   .notification-panel { width: calc(100% - 24px); right: 12px; top: 64px; max-height: 60vh; }
-  .auth-box { padding: 24px 16px; border-radius: 16px; }
+  .auth-box { 
+    padding: 24px 16px; 
+    border-radius: 16px;
+    margin: 10px auto;
+  }
+  .auth-wrap {
+    padding: 10px 16px;
+    align-items: flex-start;
+  }
   .font-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
   .comment-replies { margin-left: 0; padding-left: 0; border-left: none; }
 }
@@ -3623,6 +3636,7 @@ async function handleOCFormSubmit(e) {
   console.log('🎭 Sticker reactions + GIF support in comments!');
   console.log('🐛 FIXED: Images now show in modal!');
   console.log('👩‍💻 Creator credit added!');
+  console.log('📱 FIXED: Auth screen now scrolls on mobile!');
 })();
 </script>
 </body>
