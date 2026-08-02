@@ -508,7 +508,7 @@ body {
   font-weight: 700;
 }
 
-/* ====== AUTH - FIXED WITH BUTTONS ON TOP ====== */
+/* ====== AUTH ====== */
 .auth-wrap {
   display: flex;
   justify-content: center;
@@ -555,7 +555,6 @@ body {
   letter-spacing: 1px;
 }
 
-/* Auth tabs - moved to top */
 .auth-tabs {
   display: flex;
   gap: 8px;
@@ -581,7 +580,6 @@ body {
   color: white;
 }
 
-/* Auth action buttons - at the top of the form */
 .auth-action-buttons {
   display: flex;
   flex-direction: column;
@@ -597,7 +595,6 @@ body {
   border-radius: 14px;
 }
 
-/* Form fields */
 .auth-form-fields {
   margin-top: 4px;
 }
@@ -797,7 +794,6 @@ textarea {
   font-weight: 600;
 }
 
-/* Comment Input Area */
 .comment-input-wrapper {
   background: var(--bg-secondary);
   border-radius: 16px;
@@ -896,7 +892,6 @@ textarea {
   transform: scale(1.05);
 }
 
-/* Sticker/Emoji Picker Row */
 .comment-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -941,7 +936,6 @@ textarea {
   border-color: var(--accent4);
 }
 
-/* Individual Comment */
 .comment-item {
   display: flex;
   gap: 12px;
@@ -1069,7 +1063,6 @@ textarea {
   background: #fde3e8;
 }
 
-/* Comment Reactions (emojis under comment) */
 .comment-reactions {
   display: flex;
   flex-wrap: wrap;
@@ -1116,7 +1109,6 @@ textarea {
   color: white;
 }
 
-/* Reply section */
 .comment-replies {
   margin-left: 52px;
   padding-left: 16px;
@@ -1576,10 +1568,28 @@ textarea {
   margin-top: 6px;
 }
 
-/* ====== CHECKBOX FIX ====== */
-input[type="checkbox"] {
-  width: 20px;
-  height: 20px;
+/* ====== FIXED: CHECKBOX STYLES ====== */
+.checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 12px 16px;
+  background: var(--bg-secondary);
+  border-radius: 10px;
+  border: 2px solid var(--border-color);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.checkbox-wrapper:hover {
+  border-color: var(--accent4);
+  background: var(--tag-bg);
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+  width: 22px;
+  height: 22px;
   cursor: pointer;
   accent-color: var(--accent4);
   flex-shrink: 0;
@@ -1587,30 +1597,38 @@ input[type="checkbox"] {
   appearance: none;
   background: var(--bg-secondary);
   border: 2px solid var(--border-color);
-  border-radius: 4px;
+  border-radius: 6px;
   position: relative;
   transition: all 0.2s ease;
 }
 
-input[type="checkbox"]:checked {
+.checkbox-wrapper input[type="checkbox"]:checked {
   background: var(--accent4);
   border-color: var(--accent4);
 }
 
-input[type="checkbox"]:checked::after {
+.checkbox-wrapper input[type="checkbox"]:checked::after {
   content: "✓";
   color: white;
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
 }
 
-input[type="checkbox"]:focus {
+.checkbox-wrapper input[type="checkbox"]:focus {
   outline: 2px solid var(--accent4);
   outline-offset: 2px;
+}
+
+.checkbox-wrapper .checkbox-label {
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  user-select: none;
 }
 </style>
 </head>
@@ -2337,7 +2355,6 @@ function renderSettingsTab() {
       ${renderAppearanceTab()}
       ${renderFontTab()}
       
-      <!-- CREATOR CREDIT SECTION -->
       <div class="creator-credit">
         <div class="creator-badge">
           <span class="heart">❤️</span>
@@ -2439,7 +2456,7 @@ function renderFontTab() {
     </div>`;
 }
 
-// ====== OC FORM TAB - FIXED WITH CHECKBOX ======
+// ====== OC FORM TAB - FIXED CHECKBOX ======
 function renderOCFormTab() {
   const oc = editingOC;
   if (oc && formStickerLayers.length === 0 && oc.stickerLayers) {
@@ -2524,11 +2541,11 @@ function renderOCFormTab() {
             </div>`).join('')}
         </div>
 
-        <!-- FIXED: NSFW CHECKBOX - NOW VISIBLE -->
-        <label style="margin-top:14px;display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;background:var(--bg-secondary);border-radius:10px;border:2px solid var(--border-color);">
-          <input type="checkbox" name="contentWarning" id="contentWarningCheckbox" ${isChecked ? 'checked' : ''} style="width:20px;height:20px;cursor:pointer;accent-color:var(--accent4);flex-shrink:0;">
-          <span style="font-weight:600;color:var(--text-secondary);font-size:14px;">⚠️ This post contains mature content (NSFW)</span>
-        </label>
+        <!-- FIXED: NSFW CHECKBOX USING WRAPPER CLASS -->
+        <div class="checkbox-wrapper">
+          <input type="checkbox" name="contentWarning" id="contentWarningCheckbox" ${isChecked ? 'checked' : ''}>
+          <span class="checkbox-label">⚠️ This post contains mature content (NSFW)</span>
+        </div>
 
         ${ocFormError ? `<div class="error-msg">${esc(ocFormError)}</div>` : ''}
         <div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;">
@@ -2552,7 +2569,6 @@ function renderBeautifulComments(oc) {
       </div>
   `;
 
-  // Comment input
   html += `
     <div class="comment-input-wrapper">
       <div class="comment-input-row">
@@ -2577,7 +2593,6 @@ function renderBeautifulComments(oc) {
     </div>
   `;
 
-  // Comments list
   if (comments.length === 0) {
     html += `<p style="color:var(--text-secondary);font-size:14px;padding:20px 0;text-align:center;">No comments yet — be the first to say something! 💬</p>`;
   } else {
