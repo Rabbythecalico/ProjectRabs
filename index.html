@@ -8,10 +8,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Quicksand:wght@400;500;600;700&family=Space+Mono&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Dancing+Script:wght@400;700&family=Cormorant+Garamond:wght@400;600;700&family=Montserrat:wght@400;600;700&family=Poppins:wght@400;600;700&family=Merriweather:wght@400;700&family=Abril+Fatface&family=Great+Vibes&family=Raleway:wght@400;600;700&family=Oswald:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-/* ============================================================
-   PROJECTRABS — BEAUTIFUL COMMENTS
-   ============================================================ */
-
 /* ====== ROOT VARIABLES ====== */
 :root {
   --bg: #FBF3FF;
@@ -1568,8 +1564,8 @@ textarea {
   margin-top: 6px;
 }
 
-/* ====== FIXED: CHECKBOX STYLES ====== */
-.checkbox-wrapper {
+/* ====== CHECKBOX FIX ====== */
+.nsfw-checkbox-container {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -1582,16 +1578,15 @@ textarea {
   transition: all 0.2s ease;
 }
 
-.checkbox-wrapper:hover {
+.nsfw-checkbox-container:hover {
   border-color: var(--accent4);
   background: var(--tag-bg);
 }
 
-.checkbox-wrapper input[type="checkbox"] {
+.nsfw-checkbox-container input[type="checkbox"] {
   width: 22px;
   height: 22px;
   cursor: pointer;
-  accent-color: var(--accent4);
   flex-shrink: 0;
   -webkit-appearance: none;
   appearance: none;
@@ -1600,14 +1595,15 @@ textarea {
   border-radius: 6px;
   position: relative;
   transition: all 0.2s ease;
+  margin: 0;
 }
 
-.checkbox-wrapper input[type="checkbox"]:checked {
+.nsfw-checkbox-container input[type="checkbox"]:checked {
   background: var(--accent4);
   border-color: var(--accent4);
 }
 
-.checkbox-wrapper input[type="checkbox"]:checked::after {
+.nsfw-checkbox-container input[type="checkbox"]:checked::after {
   content: "✓";
   color: white;
   position: absolute;
@@ -1618,12 +1614,12 @@ textarea {
   font-weight: 700;
 }
 
-.checkbox-wrapper input[type="checkbox"]:focus {
+.nsfw-checkbox-container input[type="checkbox"]:focus {
   outline: 2px solid var(--accent4);
   outline-offset: 2px;
 }
 
-.checkbox-wrapper .checkbox-label {
+.nsfw-checkbox-container .nsfw-label {
   font-weight: 600;
   color: var(--text-secondary);
   font-size: 14px;
@@ -2541,10 +2537,10 @@ function renderOCFormTab() {
             </div>`).join('')}
         </div>
 
-        <!-- FIXED: NSFW CHECKBOX USING WRAPPER CLASS -->
-        <div class="checkbox-wrapper">
+        <!-- FIXED: NSFW CHECKBOX - NOW VISIBLE AND WORKING -->
+        <div class="nsfw-checkbox-container">
           <input type="checkbox" name="contentWarning" id="contentWarningCheckbox" ${isChecked ? 'checked' : ''}>
-          <span class="checkbox-label">⚠️ This post contains mature content (NSFW)</span>
+          <label for="contentWarningCheckbox" class="nsfw-label">⚠️ This post contains mature content (NSFW)</label>
         </div>
 
         ${ocFormError ? `<div class="error-msg">${esc(ocFormError)}</div>` : ''}
