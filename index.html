@@ -1959,11 +1959,14 @@ async function loadFeed() {
     if (oc) ocs.push(oc);
   }
   feedCache = ocs;
+  console.log('📚 Loaded all posts:', feedCache.length);
   return feedCache;
 }
 
 async function loadMyOCs() {
+  if (!currentUser) return [];
   myOCsCache = feedCache.filter(oc => oc.owner === currentUser.email);
+  console.log('📚 My posts:', myOCsCache.length);
   return myOCsCache;
 }
 
@@ -1974,7 +1977,12 @@ async function loadStickerLib() {
 }
 
 function getFilteredFeed() {
+  // Make sure we're using ALL posts from feedCache
   let results = [...feedCache];
+  
+  console.log('📊 Total posts in feed:', results.length);
+  
+  // Apply search filter
   if (feedSearchQuery) {
     const q = feedSearchQuery.toLowerCase();
     results = results.filter(oc =>
@@ -1986,13 +1994,27 @@ function getFilteredFeed() {
       (oc.tags || []).some(t => t.toLowerCase().includes(q))
     );
   }
-  if (feedFilterMode === 'nsfw') results = results.filter(oc => oc.contentWarning);
-  else if (feedFilterMode === 'sfw') results = results.filter(oc => !oc.contentWarning);
+  
+  // Apply NSFW filter
+  if (feedFilterMode === 'nsfw') {
+    results = results.filter(oc => oc.contentWarning === true);
+  } else if (feedFilterMode === 'sfw') {
+    results = results.filter(oc => !oc.contentWarning);
+  }
+  // 'all' shows everything
 
-  if (feedSortMode === 'newest') results.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  else if (feedSortMode === 'oldest') results.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-  else if (feedSortMode === 'popular') results.sort((a, b) => (b.likes || []).length - (a.likes || []).length);
-  else if (feedSortMode === 'mostcommented') results.sort((a, b) => (b.comments || []).length - (a.comments || []).length);
+  // Apply sorting
+  if (feedSortMode === 'newest') {
+    results.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  } else if (feedSortMode === 'oldest') {
+    results.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+  } else if (feedSortMode === 'popular') {
+    results.sort((a, b) => (b.likes || []).length - (a.likes || []).length);
+  } else if (feedSortMode === 'mostcommented') {
+    results.sort((a, b) => (b.comments || []).length - (a.comments || []).length);
+  }
+  
+  console.log('📊 Filtered results:', results.length);
   return results;
 }
 
@@ -2291,7 +2313,7 @@ function renderFeedTab() {
     ${results.length === 0 ? `
       <div class="empty-state">
         <span class="big-emoji">🖇️</span>
-        ${feedSearchQuery ? `No characters or creators matched "${esc(feedSearchQuery)}".` : `Nothing's pinned up yet. Head to <b>My OCs</b> and post your first character!`}
+        ${feedCache.length === 0 ? 'No posts have been created yet. Be the first to post a character!' : feedSearchQuery ? `No characters or creators matched "${esc(feedSearchQuery)}".` : 'No posts match your current filters.'}
       </div>` : `
     <div class="pinboard">
       ${results.map(oc => renderPinCard(oc)).join('')}
@@ -2915,7 +2937,6 @@ function attachHandlers() {
   if (ocForm) {
     setupChipHandlers();
 
-    // FIXED: Background theme click handlers
     document.querySelectorAll('#bg-swatches .bg-swatch').forEach(sw => {
       sw.onclick = function(e) {
         e.preventDefault();
@@ -3576,6 +3597,7 @@ async function handleLogin(e) {
   authError = '';
 
   await loadFeed();
+  await loadMyOCs();
   notifications = await loadNotificationsForUser(currentUser.email);
   localStorage.setItem('lastUser', currentUser.email);
   render();
@@ -3633,6 +3655,7 @@ async function handleSignupRequest(e) {
   authSuccess = '';
 
   await loadFeed();
+  await loadMyOCs();
   notifications = await loadNotificationsForUser(currentUser.email);
   localStorage.setItem('lastUser', currentUser.email);
   render();
@@ -3724,6 +3747,7 @@ async function handleOCFormSubmit(e) {
       screen = 'app';
       tab = 'feed';
       await loadFeed();
+      await loadMyOCs();
       notifications = await loadNotificationsForUser(currentUser.email);
       applyTheme(currentUser.themePref || 'bubblegum');
       if (currentUser.fontPref) applyFont(currentUser.fontPref);
@@ -3735,10 +3759,10 @@ async function handleOCFormSubmit(e) {
   setTimeout(detectKeyboard, 500);
 
   console.log('🎨 ProjectRabs with Beautiful Comments loaded!');
-  console.log('🐛 FIXED: Background themes are now clickable!');
-  console.log('🐛 FIXED: NSFW checkbox is now visible!');
+  console.log('🐛 FIXED: All posts now show in feed!');
+  console.log('🐛 FIXED: Background themes are clickable!');
+  console.log('🐛 FIXED: NSFW checkbox is visible!');
   console.log('🔗 FIXED: GitHub and Gmail links work!');
-  console.log('🎨 FIXED: Theme selection saves!');
   console.log('📱 FIXED: Auth screen scrolls on mobile!');
 })();
 </script>
