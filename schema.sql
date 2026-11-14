@@ -1,134 +1,111 @@
--- ProjectRabs database (Supabase / PostgreSQL)
--- Run in Supabase: SQL Editor > New query > paste > Run
+-- ProjectRabs shared website database for Supabase (Postgres)
+-- Run the complete file once in Supabase Dashboard > SQL Editor > New query.
 
-create table profiles (
-  id uuid primary key references auth.users on delete cascade,
-  username text unique not null check (char_length(username) between 3 and 24),
-  display_name text check (char_length(display_name) <= 40),
-  bio text check (char_length(bio) <= 300),
-  pronouns text, gender text, avatar_url text,
-  theme text default 'bubblegum', font text default 'fredoka',
-  created_at timestamptz default now()
+create extension if not exists pgcrypto;
+
+create table if not exists public.profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  username text not null unique check (char_length(username) between 3 and 24),
+  display_name text not null default 'New creator' check (char_length(display_name) between 1 and 40),
+  bio text not null default '' check (char_length(bio) <= 500),
+  pronouns text not null default '' check (char_length(pronouns) <= 40),
+  gender text not null default '' check (char_length(gender) <= 40),
+  avatar_url text not null default '',
+  theme text not null default 'bubblegum',
+  font text not null default 'quicksand',
+  created_at timestamptz not null default now()
 );
 
-create table characters (
+create table if not exists public.characters (
   id uuid primary key default gen_random_uuid(),
-  owner_id uuid not null references profiles on delete cascade,
-  name text not null check (char_length(name) <= 60),
-  description text check (char_length(description) <= 2000),
-  pronouns text, gender text,
-  tags text[] default '{}',
-  bg_theme text default 'none',
-  stickers jsonb default '[]',      -- placed sticker layers
-  images text[] default '{}',       -- Storage URLs
-  created_at timestamptz default now()
+  owner_id uuid not null constraint characters_owner_id_fkey references public.profiles(id) on delete cascade,
+  name text not null check (char_length(name) between 1 and 60),
+  description text not null check (char_length(description) between 1 and 4000),
+  pronouns text not null default '' check (char_length(pronouns) <= 40),
+  gender text not null default '' check (char_length(gender) <= 40),
+  tags text[] not null default '{}',
+  bg_theme text not null default 'none',
+  images text[] not null default '{}',
+  sticker_layers jsonb not null default '[]'::jsonb,
+  content_warning boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
 
-create table stickers (
+create table if not exists public.comments (
   id uuid primary key default gen_random_uuid(),
-  owner_id uuid not null references profiles on delete cascade,
-  url text not null, created_at timestamptz default now()
-);
-
-create table likes (
-  user_id uuid references profiles on delete cascade,
-  character_id uuid references characters on delete cascade,
-  primary key (user_id, character_id)   -- stops duplicate likes
-);
-
-create table comments (
-  id uuid primary key default gen_random_uuid(),
-  character_id uuid not null references characters on delete cascade,
-  author_id uuid not null references profiles on delete cascade,
-  parent_id uuid references comments on delete cascade,  -- replies
+  character_id uuid not null references public.characters(id) on delete cascade,
+  author_id uuid not null references public.profiles(id) on delete cascade,
   body text not null check (char_length(body) between 1 and 500),
-  created_at timestamptz default now()
+  created_at timestamptz not null default now()
 );
 
-create table comment_reactions (
-  user_id uuid references profiles on delete cascade,
-  comment_id uuid references comments on delete cascade,
-  emoji text not null,
-  primary key (user_id, comment_id, emoji)
-);
-
-create table follows (
-  follower_id uuid references profiles on delete cascade,
-  following_id uuid references profiles on delete cascade,
-  primary key (follower_id, following_id),
-  check (follower_id <> following_id)
-);
-
-create table bookmarks (
-  user_id uuid references profiles on delete cascade,
-  character_id uuid references characters on delete cascade,
+create table if not exists public.likes (
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  character_id uuid not null references public.characters(id) on delete cascade,
+  created_at timestamptz not null default now(),
   primary key (user_id, character_id)
 );
 
-create table notifications (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references profiles on delete cascade,
-  message text not null, type text default 'info',
-  read boolean default false, created_at timestamptz default now()
-);
+create index if not exists characters_created_at_idx on public.characters(created_at desc);
+create index if not exists characters_owner_id_idx on public.characters(owner_id);
+create index if not exists comments_character_id_idx on public.comments(character_id, created_at);
 
-create table reports (
-  id uuid primary key default gen_random_uuid(),
-  reporter_id uuid not null references profiles on delete cascade,
-  target_type text not null check (target_type in ('character','comment','user')),
-  target_id uuid not null, reason text not null,
-  created_at timestamptz default now()
-);
-
-create table blocks (
-  blocker_id uuid references profiles on delete cascade,
-  blocked_id uuid references profiles on delete cascade,
-  primary key (blocker_id, blocked_id)
-);
-
--- Auto-create a profile when someone signs up (after email verification setup)
-create function handle_new_user() returns trigger as $$
+create or replace function public.handle_new_projectrabs_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  requested_username text;
 begin
-  insert into profiles (id, username)
-  values (new.id, split_part(new.email,'@',1) || floor(random()*1000)::int);
+  requested_username := lower(regexp_replace(coalesce(new.raw_user_meta_data ->> 'username', split_part(new.email, '@', 1)), '[^a-zA-Z0-9_]', '', 'g'));
+  if char_length(requested_username) < 3 then
+    requested_username := 'creator_' || substr(replace(new.id::text, '-', ''), 1, 8);
+  end if;
+  insert into public.profiles (id, username, display_name)
+  values (
+    new.id,
+    left(requested_username, 24),
+    left(coalesce(nullif(new.raw_user_meta_data ->> 'display_name', ''), requested_username), 40)
+  );
   return new;
-end; $$ language plpgsql security definer;
-create trigger on_auth_user_created after insert on auth.users
-  for each row execute function handle_new_user();
+end;
+$$;
 
--- ===== Row Level Security: users can only change their own data =====
-alter table profiles enable row level security;
-alter table characters enable row level security;
-alter table stickers enable row level security;
-alter table likes enable row level security;
-alter table comments enable row level security;
-alter table comment_reactions enable row level security;
-alter table follows enable row level security;
-alter table bookmarks enable row level security;
-alter table notifications enable row level security;
-alter table reports enable row level security;
-alter table blocks enable row level security;
+drop trigger if exists on_projectrabs_auth_user_created on auth.users;
+create trigger on_projectrabs_auth_user_created
+after insert on auth.users
+for each row execute procedure public.handle_new_projectrabs_user();
 
--- Everyone can read public content
-create policy "read profiles" on profiles for select using (true);
-create policy "read characters" on characters for select using (true);
-create policy "read likes" on likes for select using (true);
-create policy "read comments" on comments for select using (true);
-create policy "read reactions" on comment_reactions for select using (true);
-create policy "read follows" on follows for select using (true);
+alter table public.profiles enable row level security;
+alter table public.characters enable row level security;
+alter table public.comments enable row level security;
+alter table public.likes enable row level security;
 
--- Owners only
-create policy "edit own profile" on profiles for update using (auth.uid() = id);
-create policy "insert own character" on characters for insert with check (auth.uid() = owner_id);
-create policy "edit own character" on characters for update using (auth.uid() = owner_id);
-create policy "delete own character" on characters for delete using (auth.uid() = owner_id);
-create policy "own stickers" on stickers for all using (auth.uid() = owner_id) with check (auth.uid() = owner_id);
-create policy "own likes" on likes for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
-create policy "add comment" on comments for insert with check (auth.uid() = author_id);
-create policy "delete own comment" on comments for delete using (auth.uid() = author_id);
-create policy "own reactions" on comment_reactions for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
-create policy "own follows" on follows for all using (auth.uid() = follower_id) with check (auth.uid() = follower_id);
-create policy "own bookmarks" on bookmarks for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
-create policy "own notifications" on notifications for all using (auth.uid() = user_id);
-create policy "send report" on reports for insert with check (auth.uid() = reporter_id);
-create policy "own blocks" on blocks for all using (auth.uid() = blocker_id) with check (auth.uid() = blocker_id);
+create policy "Public profiles are viewable" on public.profiles for select using (true);
+create policy "Users create own profile" on public.profiles for insert to authenticated with check (auth.uid() = id);
+create policy "Users update own profile" on public.profiles for update to authenticated using (auth.uid() = id) with check (auth.uid() = id);
+
+create policy "Characters are public" on public.characters for select using (true);
+create policy "Signed-in users create their characters" on public.characters for insert to authenticated with check (auth.uid() = owner_id);
+create policy "Owners update characters" on public.characters for update to authenticated using (auth.uid() = owner_id) with check (auth.uid() = owner_id);
+create policy "Owners delete characters" on public.characters for delete to authenticated using (auth.uid() = owner_id);
+
+create policy "Comments are public" on public.comments for select using (true);
+create policy "Signed-in users add comments" on public.comments for insert to authenticated with check (auth.uid() = author_id);
+create policy "Authors delete their comments" on public.comments for delete to authenticated using (auth.uid() = author_id);
+create policy "Character owners delete comments on their characters" on public.comments for delete to authenticated using (
+  exists (select 1 from public.characters c where c.id = character_id and c.owner_id = auth.uid())
+);
+
+create policy "Likes are public" on public.likes for select using (true);
+create policy "Users add their own likes" on public.likes for insert to authenticated with check (auth.uid() = user_id);
+create policy "Users remove their own likes" on public.likes for delete to authenticated using (auth.uid() = user_id);
+
+grant select on public.profiles, public.characters, public.comments, public.likes to anon, authenticated;
+grant insert, update on public.profiles to authenticated;
+grant insert, update, delete on public.characters to authenticated;
+grant insert, delete on public.comments to authenticated;
+grant insert, delete on public.likes to authenticated;
